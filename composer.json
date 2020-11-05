@@ -1,0 +1,23 @@
+{
+  "name": "stephanschuler/telegram-bot-channel",
+  "description": "Do not use in production. This is just an experiment for now.",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Stephan Schuler",
+      "email": "stephan.schuler@netlogix.de"
+    }
+  ],
+  "require": {
+    "php": "~7.2",
+    "ext-json": "*",
+    "psr/http-message": "^1.0",
+    "stephanschuler/telegram-bot-api": "dev-master"
+  },
+  "autoload": {
+    "psr-4": {
+      "StephanSchuler\\TelegramBot\\Channel\\": "src"
+    }
+  }
+}
