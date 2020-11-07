@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "php": "~7.2",
+    "php": "~7.4",
     "ext-json": "*",
     "psr/http-message": "^1.0",
     "stephanschuler/telegram-bot-api": "dev-master"
