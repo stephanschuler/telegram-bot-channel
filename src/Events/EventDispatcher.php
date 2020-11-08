@@ -3,17 +3,14 @@ declare(strict_types=1);
 
 namespace StephanSchuler\TelegramBot\Channel\Events;
 
-use SplObjectStorage;
 use function assert;
-use function is_callable;
 
 class EventDispatcher /* implements \Psr\EventDispatcher\EventDispatcherInterface */
 {
-    protected $consumers;
+    protected $consumers = [];
 
     private function __construct()
     {
-        $this->consumers = new SplObjectStorage();
     }
 
     public static function create(): self
@@ -25,14 +22,14 @@ class EventDispatcher /* implements \Psr\EventDispatcher\EventDispatcherInterfac
     {
         $consumers = [];
 
-        foreach ($this->consumers as $consumer) {
-            $conditions = $this->consumers[$consumer];
-            foreach ($conditions as $condition) {
-                assert(is_callable($condition));
-                if ($condition($event)) {
-                    $consumers[] = $consumer;
-                    break;
-                }
+        foreach ($this->consumers as $relation) {
+            assert($relation instanceof ConsumerRelation);
+            $consumer = $relation->getEventConsumer();
+            if ($consumer instanceof EventConsumer
+                && !isset($consumers[spl_object_id($consumer)])
+                && $relation->matchesCondition($event)
+            ) {
+                $consumers[spl_object_id($consumer)] = $consumer;
             }
         }
 
@@ -49,13 +46,19 @@ class EventDispatcher /* implements \Psr\EventDispatcher\EventDispatcherInterfac
 
     public function register(EventConsumer $consumer, callable $condition): void
     {
-        $conditions = $this->consumers[$consumer] ?? [];
-        $conditions[] = $condition;
-        $this->consumers[$consumer] = $conditions;
+        $relation = ConsumerRelation::create($consumer)
+            ->withCondition($condition);
+        $this->consumers[] = $relation;
     }
 
     public function unregister(EventConsumer $consumer): void
     {
-        unset($this->consumers[$consumer]);
+        $this->consumers = array_filter($this->consumers, static function (ConsumerRelation $relation) use ($consumer) {
+            $delinquent = $relation->getEventConsumer();
+            if (!($delinquent instanceof EventConsumer)) {
+                return false;
+            }
+            return !($delinquent === $consumer);
+        });
     }
 }
