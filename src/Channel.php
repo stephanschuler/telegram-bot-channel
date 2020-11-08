@@ -8,6 +8,8 @@ use StephanSchuler\TelegramBot\Api\Connection;
 use StephanSchuler\TelegramBot\Api\Sendable\GetUpdates;
 use StephanSchuler\TelegramBot\Api\Types\Chat;
 use StephanSchuler\TelegramBot\Channel\Events\EventConsumerClosure;
+use StephanSchuler\TelegramBot\Channel\Events\EventEmitter;
+use function json_decode;
 
 final class Channel
 {
@@ -23,7 +25,6 @@ final class Channel
         $this->lastSeenMessageId = $lastSeenMessageId;
         $this->timeoutInSeconds = $timeoutInSeconds;
         $this->events = Events\EventDispatcher::create();
-        $this->events->name = 'channel';
     }
 
     public static function connectedTo(Connection $connection): self
@@ -41,44 +42,43 @@ final class Channel
         return new static($this->connection, $this->lastSeenMessageId, $timeoutInSeconds);
     }
 
+    public function getEventEmitter(): EventEmitter
+    {
+        return $this->scheduled(function () {
+            return $this->events->getEventEmitter();
+        });
+    }
+
     public function tap(callable $consumer): self
     {
-        return $this->scheduled(function () use ($consumer) {
-            $this->events
-                ->getEmitter()
-                ->register(
-                    EventConsumerClosure::create($consumer)
-                );
-
-            return $this;
-        });
+        $this->getEventEmitter()
+            ->register(
+                EventConsumerClosure::create($consumer)
+            );
+        return $this;
     }
 
     public function getEventBus(): EventLoop
     {
         return $this->scheduled(function () {
             $eventBus = new EventLoop(
-                $this->events->getEmitter()
+                $this->events->getEventEmitter()
             );
             return $eventBus;
         });
     }
 
-    public function trackConversation(Chat $chat, Chat $user)
+    public function trackConversation(Chat $chat, Chat $user): EventEmitter
     {
-        $eventDispatcher = Events\EventDispatcher::create();
-        $this->tap(static function ($data) use ($eventDispatcher, $chat, $user) {
+        $filter = static function ($data) use ($chat, $user) {
             $messageChat = Chat::forUser($data['message']['chat']['id'] ?? 0);
             $messageUser = Chat::forUser($data['message']['from']['id'] ?? 0);
-            if (!$messageChat->equals($chat)) {
-                return;
-            }
-            if (!$messageUser->equals($user)) {
-                return;
-            }
-            $eventDispatcher->dispatch($data);
-        });
-        return $eventDispatcher->getEmitter();
+            return $messageChat->equals($chat)
+                && $messageUser->equals($user);
+        };
+        return $this
+            ->getEventEmitter()
+            ->filter($filter);
     }
 
     public function getConnection(): Connection
@@ -98,7 +98,7 @@ final class Channel
         }
     }
 
-    private function schedule()
+    private function schedule(): void
     {
         $this->connection
             ->send(

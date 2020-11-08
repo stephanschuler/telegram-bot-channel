@@ -5,37 +5,39 @@ namespace StephanSchuler\TelegramBot\Channel\Events;
 
 class EventEmitter
 {
-    protected $consumers = [];
+    private $eventDispatcher;
+    private $condition;
 
-    public function filter(callable $filter): self
+    private function __construct(EventDispatcher $eventDispatcher, callable $condition)
     {
-        $dispatcher = EventDispatcher::create();
-        $this->register(EventConsumerClosure::create(function ($event) use ($dispatcher): void {
-            $dispatcher->dispatch($event);
-        }));
-        return $dispatcher->getEmitter();
+        $this->eventDispatcher = $eventDispatcher;
+        $this->condition = $condition;
+    }
+
+    public static function create(EventDispatcher $eventDispatcher): self
+    {
+        $always = static function ($data) {
+            return true;
+        };
+        return new static($eventDispatcher, $always);
+    }
+
+    public function filter(callable $condition): self
+    {
+        $preCondition = $this->condition;
+        $filter = static function ($data) use ($preCondition, $condition) {
+            return $preCondition($data) && $condition($data);
+        };
+        return new static($this->eventDispatcher, $filter);
     }
 
     public function register(EventConsumer $consumer): void
     {
-        $this->consumers[] = $consumer;
+        $this->eventDispatcher->register($consumer, $this->condition);
     }
 
     public function unregister(EventConsumer $consumer): void
     {
-        $this->consumers = array_filter($this->consumers, function (EventConsumer $delinquent) use ($consumer) {
-            return $delinquent === $consumer;
-        });
-    }
-
-    /** @internal */
-    public function __emit($event): void
-    {
-        $consumers = $this->consumers;
-        $this->consumers = [];
-        array_walk($consumers, function (EventConsumer $consumer) use ($event) {
-            $consumer->consume($event);
-        });
-        $this->consumers = array_merge($consumers, $this->consumers);
+        $this->eventDispatcher->unregister($consumer);
     }
 }
