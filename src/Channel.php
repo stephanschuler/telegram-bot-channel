@@ -68,17 +68,9 @@ final class Channel
         });
     }
 
-    public function trackConversation(Chat $chat, Chat $user): EventEmitter
+    public function trackConversation(Chat $chat, Chat $user): Conversation
     {
-        $filter = static function ($data) use ($chat, $user) {
-            $messageChat = Chat::forUser($data['message']['chat']['id'] ?? 0);
-            $messageUser = Chat::forUser($data['message']['from']['id'] ?? 0);
-            return $messageChat->equals($chat)
-                && $messageUser->equals($user);
-        };
-        return $this
-            ->getEventEmitter()
-            ->filter($filter);
+        return Conversation::create($this, $chat, $user);
     }
 
     public function getConnection(): Connection
