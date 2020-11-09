@@ -31,13 +31,13 @@ class EventEmitter
         return new static($this->eventDispatcher, $filter);
     }
 
-    public function register(EventConsumer $consumer): void
+    public function register(EventConsumer $consumer): callable
     {
-        $this->eventDispatcher->register($consumer, $this->condition);
+        return $this->eventDispatcher->register($consumer, $this->condition);
     }
 
-    public function unregister(EventConsumer $consumer): void
+    public function unregister(EventConsumer $consumer, ?callable $condition = null): void
     {
-        $this->eventDispatcher->unregister($consumer);
+        $this->eventDispatcher->unregister($consumer, $condition);
     }
 }

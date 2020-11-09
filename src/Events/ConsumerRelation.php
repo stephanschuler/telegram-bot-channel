@@ -29,6 +29,11 @@ class ConsumerRelation
         return $this->consumer;
     }
 
+    public function getCondition(): callable
+    {
+        return $this->condition;
+    }
+
     public function matchesCondition($event): bool
     {
         return ($this->condition)($event);

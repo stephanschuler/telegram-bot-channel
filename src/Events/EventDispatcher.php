@@ -7,6 +7,8 @@ use function assert;
 
 class EventDispatcher /* implements \Psr\EventDispatcher\EventDispatcherInterface */
 {
+    private const DROP = false;
+    private const KEEP = true;
     protected $consumers = [];
 
     private function __construct()
@@ -44,21 +46,32 @@ class EventDispatcher /* implements \Psr\EventDispatcher\EventDispatcherInterfac
         return EventEmitter::create($this);
     }
 
-    public function register(EventConsumer $consumer, callable $condition): void
+    public function register(EventConsumer $consumer, callable $condition): callable
     {
         $relation = ConsumerRelation::create($consumer)
             ->withCondition($condition);
         $this->consumers[] = $relation;
+        return function () use ($consumer, $condition) {
+            $this->unregister($consumer, $condition);
+        };
     }
 
-    public function unregister(EventConsumer $consumer): void
+    public function unregister(EventConsumer $consumer, ?callable $condition = null): void
     {
-        $this->consumers = array_filter($this->consumers, static function (ConsumerRelation $relation) use ($consumer) {
-            $delinquent = $relation->getEventConsumer();
-            if (!($delinquent instanceof EventConsumer)) {
-                return false;
+        $this->consumers = array_filter(
+            $this->consumers,
+            static function (ConsumerRelation $relation) use ($consumer, $condition) {
+                $delinquent = $relation->getEventConsumer();
+                $delinquentCondition = $relation->getCondition();
+                $relationIsExpired = !($delinquent instanceof EventConsumer);
+                switch (true) {
+                    case ($relationIsExpired):
+                    case ($consumer === $delinquent && $condition === $delinquentCondition):
+                    case ($consumer === $delinquent && $condition === null):
+                        return self::DROP;
+                }
+                return self::KEEP;
             }
-            return !($delinquent === $consumer);
-        });
+        );
     }
 }
