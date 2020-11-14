@@ -7,9 +7,9 @@ use Psr\Http\Message\ResponseInterface;
 use StephanSchuler\TelegramBot\Api\Connection;
 use StephanSchuler\TelegramBot\Api\Sendable\GetUpdates;
 use StephanSchuler\TelegramBot\Api\Types\Chat;
-use StephanSchuler\TelegramBot\Channel\Events\ClosureBasedListener;
-use StephanSchuler\TelegramBot\Channel\Events\EventEmitter;
-use StephanSchuler\TelegramBot\Channel\Events\Events;
+use StephanSchuler\Events\ClosureBasedListener;
+use StephanSchuler\Events\EventEmitter;
+use StephanSchuler\Events\Events;
 use function json_decode;
 
 final class Channel

@@ -7,7 +7,7 @@ use StephanSchuler\TelegramBot\Api\Connection;
 use StephanSchuler\TelegramBot\Api\Sendable\SendMessage;
 use StephanSchuler\TelegramBot\Api\Types\Chat;
 use StephanSchuler\TelegramBot\Api\Types\Message;
-use StephanSchuler\TelegramBot\Channel\Events\Events;
+use StephanSchuler\Events\Events;
 
 final class Conversation
 {

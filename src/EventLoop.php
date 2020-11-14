@@ -4,8 +4,8 @@ declare(strict_types=1);
 namespace StephanSchuler\TelegramBot\Channel;
 
 use StephanSchuler\TelegramBot\Api\Command;
-use StephanSchuler\TelegramBot\Channel\Events\ClosureBasedListener;
-use StephanSchuler\TelegramBot\Channel\Events\Events;
+use StephanSchuler\Events\ClosureBasedListener;
+use StephanSchuler\Events\Events;
 use function preg_quote;
 use function str_replace;
 
