@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace StephanSchuler\TelegramBot\Channel;
 
+use StephanSchuler\Events\Event;
 use StephanSchuler\TelegramBot\Api\Connection;
 use StephanSchuler\TelegramBot\Api\Sendable\SendMessage;
 use StephanSchuler\TelegramBot\Api\Types\Chat;
@@ -17,7 +18,11 @@ final class Conversation
 
     private function __construct(Channel $channel, Chat $chat, Chat $user)
     {
-        $filter = static function (array $data) use ($chat, $user) {
+        $filter = static function (Event $event) use ($chat, $user) {
+            if (!$event instanceof Update) {
+                return false;
+            }
+            $data = $event->toArray();
             $messageChat = Chat::forUser($data['message']['chat']['id'] ?? 0);
             $messageUser = Chat::forUser($data['message']['from']['id'] ?? 0);
             return $messageChat->equals($chat)

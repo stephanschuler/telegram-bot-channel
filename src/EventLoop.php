@@ -3,6 +3,7 @@ declare(strict_types=1);
 
 namespace StephanSchuler\TelegramBot\Channel;
 
+use StephanSchuler\Events\Event;
 use StephanSchuler\TelegramBot\Api\Command;
 use StephanSchuler\Events\ClosureBasedListener;
 use StephanSchuler\Events\Events;
@@ -17,7 +18,7 @@ class EventLoop
 
     public function __construct(Events $events)
     {
-        $this->eventConsumer = ClosureBasedListener::create(function ($data) {
+        $this->eventConsumer = ClosureBasedListener::create(function (Event $data) {
             $this->dispatchData($data);
         });
 
@@ -25,13 +26,17 @@ class EventLoop
         $this->events->register($this->eventConsumer);
     }
 
-    public function dispatchData($data)
+    public function dispatchData(Event $event)
     {
-        $text = $data['message']['text'] ?? '';
+        if (!($event instanceof Update)) {
+            return;
+        }
+        $message = $event->toArray();
+        $text = $message['message']['text'] ?? '';
         foreach ($this->commands as $command) {
             assert($command instanceof Delegation);
             if ($command->matches($text)) {
-                $command->__invoke($data);
+                $command->__invoke($message);
             }
         }
     }

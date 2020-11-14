@@ -4,12 +4,12 @@ declare(strict_types=1);
 namespace StephanSchuler\TelegramBot\Channel;
 
 use Psr\Http\Message\ResponseInterface;
-use StephanSchuler\TelegramBot\Api\Connection;
-use StephanSchuler\TelegramBot\Api\Sendable\GetUpdates;
-use StephanSchuler\TelegramBot\Api\Types\Chat;
 use StephanSchuler\Events\ClosureBasedListener;
 use StephanSchuler\Events\EventEmitter;
 use StephanSchuler\Events\Events;
+use StephanSchuler\TelegramBot\Api\Connection;
+use StephanSchuler\TelegramBot\Api\Sendable\GetUpdates;
+use StephanSchuler\TelegramBot\Api\Types\Chat;
 use function json_decode;
 
 final class Channel
@@ -103,7 +103,7 @@ final class Channel
                 $result = json_decode($response->getBody()->getContents(), true);
                 if ($result['ok'] === true) {
                     foreach ($result['result'] as $message) {
-                        $this->events->dispatch($message);
+                        $this->events->dispatch(new Update($message));
                         $this->lastSeenMessageId = $message['update_id'];
                     }
                     $this->schedule();
