@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace StephanSchuler\TelegramBot\Channel\Events;
 
-class EventConsumerClosure implements EventConsumer
+class ClosureBasedListener implements Listener
 {
     private $consume;
 
@@ -17,7 +17,7 @@ class EventConsumerClosure implements EventConsumer
         return new static($consume);
     }
 
-    public function consume($data): void
+    public function __invoke($data): void
     {
         ($this->consume)($data);
     }

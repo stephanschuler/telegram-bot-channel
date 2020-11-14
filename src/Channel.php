@@ -7,8 +7,9 @@ use Psr\Http\Message\ResponseInterface;
 use StephanSchuler\TelegramBot\Api\Connection;
 use StephanSchuler\TelegramBot\Api\Sendable\GetUpdates;
 use StephanSchuler\TelegramBot\Api\Types\Chat;
-use StephanSchuler\TelegramBot\Channel\Events\EventConsumerClosure;
+use StephanSchuler\TelegramBot\Channel\Events\ClosureBasedListener;
 use StephanSchuler\TelegramBot\Channel\Events\EventEmitter;
+use StephanSchuler\TelegramBot\Channel\Events\Events;
 use function json_decode;
 
 final class Channel
@@ -24,7 +25,7 @@ final class Channel
         $this->connection = $connection;
         $this->lastSeenMessageId = $lastSeenMessageId;
         $this->timeoutInSeconds = $timeoutInSeconds;
-        $this->events = Events\EventDispatcher::create();
+        $this->events = EventEmitter::create();
     }
 
     public static function connectedTo(Connection $connection): self
@@ -42,29 +43,29 @@ final class Channel
         return new static($this->connection, $this->lastSeenMessageId, $timeoutInSeconds);
     }
 
-    public function getEventEmitter(): EventEmitter
+    public function getEvents(): Events
     {
         return $this->scheduled(function () {
-            return $this->events->getEventEmitter();
+            return $this->events->getEvents();
         });
     }
 
     public function tap(callable $consumer): self
     {
-        $this->getEventEmitter()
+        $this->getEvents()
             ->register(
-                EventConsumerClosure::create($consumer)
+                ClosureBasedListener::create($consumer)
             );
         return $this;
     }
 
-    public function getEventBus(): EventLoop
+    public function getEventLoop(): EventLoop
     {
         return $this->scheduled(function () {
-            $eventBus = new EventLoop(
-                $this->events->getEventEmitter()
+            $eventLoop = new EventLoop(
+                $this->events->getEvents()
             );
-            return $eventBus;
+            return $eventLoop;
         });
     }
 

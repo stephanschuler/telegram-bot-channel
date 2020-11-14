@@ -3,18 +3,18 @@ declare(strict_types=1);
 
 namespace StephanSchuler\TelegramBot\Channel\Events;
 
-class ConsumerRelation
+class Binding
 {
     private $consumer;
     private $condition;
 
-    public function __construct(EventConsumer $consumer, callable $condition)
+    public function __construct(Listener $consumer, callable $condition)
     {
         $this->consumer = $consumer;
         $this->condition = $condition;
     }
 
-    public static function create(EventConsumer $consumer): self
+    public static function create(Listener $consumer): self
     {
         return new static($consumer, self::always());
     }
@@ -24,7 +24,7 @@ class ConsumerRelation
         return new static($this->consumer, $condition);
     }
 
-    public function getEventConsumer(): ?EventConsumer
+    public function getListener(): ?Listener
     {
         return $this->consumer;
     }

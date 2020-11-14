@@ -7,12 +7,12 @@ use StephanSchuler\TelegramBot\Api\Connection;
 use StephanSchuler\TelegramBot\Api\Sendable\SendMessage;
 use StephanSchuler\TelegramBot\Api\Types\Chat;
 use StephanSchuler\TelegramBot\Api\Types\Message;
-use StephanSchuler\TelegramBot\Channel\Events\EventEmitter;
+use StephanSchuler\TelegramBot\Channel\Events\Events;
 
 final class Conversation
 {
     private $channel;
-    private $eventEmitter;
+    private $events;
     private $chat;
 
     private function __construct(Channel $channel, Chat $chat, Chat $user)
@@ -23,16 +23,16 @@ final class Conversation
             return $messageChat->equals($chat)
                 && $messageUser->equals($user);
         };
-        $this->eventEmitter = $channel
-            ->getEventEmitter()
+        $this->events = $channel
+            ->getEvents()
             ->filter($filter);
         $this->channel = $channel;
         $this->chat = $chat;
     }
 
-    public function getEventEmitter(): EventEmitter
+    public function getEvents(): Events
     {
-        return $this->eventEmitter;
+        return $this->events;
     }
 
     public function getConnection(): Connection

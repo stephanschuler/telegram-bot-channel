@@ -4,25 +4,25 @@ declare(strict_types=1);
 namespace StephanSchuler\TelegramBot\Channel;
 
 use StephanSchuler\TelegramBot\Api\Command;
-use StephanSchuler\TelegramBot\Channel\Events\EventConsumerClosure;
-use StephanSchuler\TelegramBot\Channel\Events\EventEmitter;
+use StephanSchuler\TelegramBot\Channel\Events\ClosureBasedListener;
+use StephanSchuler\TelegramBot\Channel\Events\Events;
 use function preg_quote;
 use function str_replace;
 
 class EventLoop
 {
     private $eventConsumer;
-    private $eventEmitter;
+    private $events;
     private $commands = [];
 
-    public function __construct(EventEmitter $eventEmitter)
+    public function __construct(Events $events)
     {
-        $this->eventConsumer = EventConsumerClosure::create(function ($data) {
+        $this->eventConsumer = ClosureBasedListener::create(function ($data) {
             $this->dispatchData($data);
         });
 
-        $this->eventEmitter = $eventEmitter;
-        $this->eventEmitter->register($this->eventConsumer);
+        $this->events = $events;
+        $this->events->register($this->eventConsumer);
     }
 
     public function dispatchData($data)

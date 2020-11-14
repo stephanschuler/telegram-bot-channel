@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace StephanSchuler\TelegramBot\Channel\Events;
 
-interface EventConsumer
+interface Listener
 {
-    public function consume($data): void;
+    public function __invoke($data): void;
 }
